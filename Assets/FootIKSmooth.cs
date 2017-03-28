@@ -42,9 +42,8 @@ public class FootIKSmooth : MonoBehaviour
 				anim.SetIKPosition(AvatarIKGoal.RightFoot, hit.point + offset); //Posocionamos el pie segun dio el Raycast
 
 #if DEBUGMODE
-				Debug.DrawLine(FootPos, hit.point, Color.red);
-				Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootRight.right), Color.blue);
-				Debug.DrawLine(FootRight.position, FootRight.position + FootRight.right, Color.yellow);
+				Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootLeft.right), Color.blue);
+				Debug.DrawLine(FootLeft.position, FootLeft.position + FootLeft.right, Color.yellow);
 #endif
 
                 if (WeightRotationRight > 0f) //Ajustamos rotacion si se tiene asignado
