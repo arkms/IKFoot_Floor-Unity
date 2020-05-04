@@ -13,4 +13,4 @@ This is a only a example how you can use the IK of animator for set the feet to 
 
 
 The MIT License (MIT) 
-Copyright (c) 2017 Arkms
+Copyright (c) 2020 Arkms
