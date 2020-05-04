@@ -1,6 +1,4 @@
-﻿//#define DEBUGMODE
-
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FootIKSmooth : MonoBehaviour
 {
@@ -13,15 +11,19 @@ public class FootIKSmooth : MonoBehaviour
     public float WeightPositionLeft = 1f;
 	[Range(0f, 1f)]
 	public float WeightRotationLeft = 0f;
-#if DEBUGMODE
+
+    Animator anim;
+    [Tooltip("Offset for Foot position")]
+    public Vector3 offsetFoot;
+    [Tooltip("Layer where foot can adjust to surface")]
+    public LayerMask RayMask;
+
+
+    [Header("DEBUG")]
+    //This line can be delete
+    public bool DebugEnable = true;
     public Transform FootRight = null;
     public Transform FootLeft = null;
-#endif
-    Animator anim;
-    [Tooltip("Offset para ajustar posicion de pie")]
-    public Vector3 offset;
-    [Tooltip("Capa de los objetos donde se puede ajustar el pie")]
-    public LayerMask RayMask;
 
     void Start()
     {
@@ -30,68 +32,73 @@ public class FootIKSmooth : MonoBehaviour
 
     RaycastHit hit;
 
-    void OnAnimatorIK()
+    void OnAnimatorIK(int _layerIndex)
     {
         if(IkActive)
         {
-			Vector3 FootPos = anim.GetIKPosition(AvatarIKGoal.RightFoot); //Obtenemos posicion del Pie
-            if (Physics.Raycast(FootPos + Vector3.up, Vector3.down, out hit, 1.2f, RayMask)) //Lanzamos raycast hacia abajo
+			Vector3 FootPos = anim.GetIKPosition(AvatarIKGoal.RightFoot); //get current foot position (After animation apply)
+            if (Physics.Raycast(FootPos + Vector3.up, Vector3.down, out hit, 1.2f, RayMask)) //Throw raycast to down
             {
 				anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, WeightPositionRight);
 				anim.SetIKRotationWeight(AvatarIKGoal.RightFoot, WeightRotationRight);
-				anim.SetIKPosition(AvatarIKGoal.RightFoot, hit.point + offset); //Posocionamos el pie segun dio el Raycast
+				anim.SetIKPosition(AvatarIKGoal.RightFoot, hit.point + offsetFoot); //Set foot where raycast hit
 
-#if DEBUGMODE
-				Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootLeft.right), Color.blue);
-				Debug.DrawLine(FootLeft.position, FootLeft.position + FootLeft.right, Color.yellow);
-#endif
-
-                if (WeightRotationRight > 0f) //Ajustamos rotacion si se tiene asignado
+                // CAN BE DELETE ------------------------------------------------
+                if(DebugEnable)
                 {
-                    //Formula para determina que rotacion requiere el pie (Esto puede mejorarse aun)
+                    Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootLeft.right), Color.blue);
+                    Debug.DrawLine(FootLeft.position, FootLeft.position + FootLeft.right, Color.yellow);
+                }
+                // FINISH CAN BE DELETE -----------------------------------------------
+
+                if (WeightRotationRight > 0f) //adjust foot if is enable
+                {
+                    //Little formula to calculate foot rotation (This can be better)
                     Quaternion footRotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, hit.normal), hit.normal);
                     anim.SetIKRotation(AvatarIKGoal.RightFoot, footRotation);
                 }
             }
-            else //No dio a nada, mejor que conserve poisicion y rotacion de la animacion
+            else //Raycast does not hit anything, so we keep original position and rotation
             {
                 anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0f);
                 anim.SetIKRotationWeight(AvatarIKGoal.RightFoot, 0f);
             }
 
-			FootPos = anim.GetIKPosition(AvatarIKGoal.LeftFoot); //Obtenemos posicion del Pie
-            if (Physics.Raycast(FootPos + Vector3.up, Vector3.down, out hit, 1.2f, RayMask)) //Lanzamos raycast hacia abajo
+			FootPos = anim.GetIKPosition(AvatarIKGoal.LeftFoot); //get current foot position
+            if (Physics.Raycast(FootPos + Vector3.up, Vector3.down, out hit, 1.2f, RayMask)) //Throw raycast to down
             {
 				anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, WeightPositionLeft);
 				anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, WeightRotationLeft);
-				anim.SetIKPosition(AvatarIKGoal.LeftFoot, hit.point + offset);
+				anim.SetIKPosition(AvatarIKGoal.LeftFoot, hit.point + offsetFoot);
 
-#if DEBUGMODE
-                Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootLeft.right), Color.blue);
-				Debug.DrawLine(FootLeft.position, FootLeft.position + FootLeft.right, Color.yellow);
-#endif
-
-                if (WeightRotationLeft > 0f)//Ajustamos rotacion si se tiene asignado
+                // CAN BE DELETE ------------------------------------------------
+                if (DebugEnable)
                 {
-                    //Formula para determina que rotacion requiere el pie (Esto puede mejorarse aun)
+                    Debug.DrawLine(hit.point, Vector3.ProjectOnPlane(hit.normal, FootLeft.right), Color.blue);
+                    Debug.DrawLine(FootLeft.position, FootLeft.position + FootLeft.right, Color.yellow);
+                }
+                // FINISH CAN BE DELETE -----------------------------------------------
+
+                if (WeightRotationLeft > 0f) //adjust foot if is enable
+                {
+                    //Little formula to calculate foot rotation (This can be better)
                     Quaternion footRotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, hit.normal), hit.normal);
                     anim.SetIKRotation(AvatarIKGoal.LeftFoot, footRotation);
                 }
             }
-            else //No dio a nada, mejor que conserve poisicion y rotacion de la animacion
+            else //Raycast does not hit anything, so we keep original position and rotation
             {
                 anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0f);
                 anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 0f);
             }
-            
-
         }
-        else //IK Apagado, no hacemos nada
+        else //IK is turn off, we not set anything
         {
             anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0f);
             anim.SetIKRotationWeight(AvatarIKGoal.RightFoot, 0f);
             anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0f);
             anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 0f);
         }
-    }
+
+    } //End OnAnimatorIK()
 }
